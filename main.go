@@ -1,7 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
+	"os"
 	"time"
 
 	uilive "github.com/gosuri/uilive"
@@ -9,8 +13,6 @@ import (
 
 func main() {
 	output := uilive.New()
-
-	// List in reverse order for correct display.
 	output.Start()
 
 	for i := 0; i <= 1000; i++ {
@@ -18,7 +20,7 @@ func main() {
 
 		timeOutput := fmt.Sprintf("Last updated: %s\n", timestamp)
 		headers := fmt.Sprintf("Product\t\t\t| Availability\n")
-		productAvailability := getProductAvailability()
+		productAvailability := getProductAvailability("MLLA3B/A")
 
 		outputString := timeOutput + headers + productAvailability
 
@@ -27,7 +29,6 @@ func main() {
 		time.Sleep(time.Second * 5)
 	}
 
-	// flush and stop rendering
 	output.Stop()
 }
 
@@ -39,6 +40,25 @@ func getTime() string {
 	return timestamp
 }
 
-func getProductAvailability() string {
-	return "iPhone 13 Pro Max \t| ✅\t\niPhone 13 \t\t| ✅\n"
+func getProductAvailability(productCode string) string {
+	var productOutput string
+	var j interface{}
+
+	postcode := os.Getenv("POSTCODE")
+
+	resp, err := http.Get("https://www.apple.com/uk/shop/pickup-message-recommendations?location=" + postcode + "&product=MLLA3B/A")
+	catchError(err)
+
+	err = json.NewDecoder(resp.Body).Decode(&j)
+	catchError(err)
+
+	// productOutput = ""
+
+	return productOutput
+}
+
+func catchError(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
 }
